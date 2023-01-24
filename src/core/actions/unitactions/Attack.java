@@ -6,48 +6,50 @@ import core.actions.cityactions.CityAction;
 import core.game.GameState;
 import core.actors.units.Unit;
 
-public class Attack extends UnitAction
-{
+public class Attack extends UnitAction {
     private int targetId;
 
-    public Attack (int unitId)
-    {
-        super(Types.ACTION.ATTACK);
+    public Attack( int unitId ) {
+        super( Types.ACTION.ATTACK );
         super.unitId = unitId;
     }
 
-    public void setTargetId(int targetId) {this.targetId = targetId;}
+    public void setTargetId( int targetId ) {
+        this.targetId = targetId;
+    }
+
     public int getTargetId() {
         return targetId;
     }
 
     @Override
-    public boolean isFeasible(final GameState gs)
-    {
-        Unit target = (Unit) gs.getActor(this.targetId);
-        Unit attacker = (Unit) gs.getActor(this.unitId);
+    public boolean isFeasible( final GameState gs ) {
+        Unit target = (Unit) gs.getActor( this.targetId );
+        Unit attacker = (Unit) gs.getActor( this.unitId );
 
         // Check if target is not null and that it can attack
-        if(target == null || !attacker.canAttack() || attacker.getType() == Types.UNIT.MIND_BENDER)
+        if (attacker == null || target == null || !attacker.canAttack() || attacker.getType() == Types.UNIT.MIND_BENDER)
             return false;
 
-        return unitInRange(attacker, target, gs.getBoard());
+        return unitInRange( attacker , target , gs.getBoard() );
     }
 
     @Override
     public Action copy() {
-        Attack attack = new Attack(this.unitId);
-        attack.setTargetId(this.targetId);
+        Attack attack = new Attack( this.unitId );
+        attack.setTargetId( this.targetId );
         return attack;
     }
 
-    public String toString() { return "ATTACK by unit " + this.unitId + " to unit " + this.targetId;}
+    public String toString() {
+        return "ATTACK by unit " + this.unitId + " to unit " + this.targetId;
+    }
 
-    public boolean equals(Object o) {
-        if(!(o instanceof Attack))
+    public boolean equals( Object o ) {
+        if (!( o instanceof Attack ))
             return false;
         Attack other = (Attack) o;
 
-        return super.equals(other) && targetId == other.targetId;
+        return super.equals( other ) && targetId == other.targetId;
     }
 }

@@ -322,7 +322,7 @@ public class Game {
                 boolean showAllBoard = Constants.GUI_FORCE_FULL_OBS || Constants.PLAY_WITH_FULL_OBS;
 
                 if (showAllBoard) frame.update( getGameState( -1 ) , action );  // Full Obs
-                else frame.update( gameStateObservations[ gs.getActiveTribeID() ] , action );        // Partial Obs
+                else frame.update( gameStateObservations[ currentPlayerIndex ] , action );        // Partial Obs
 
                 // Turn should be ending, start timer for delay of next action and show all updates
                 if (action != null && action.getActionType() == END_TURN) {
@@ -331,7 +331,7 @@ public class Game {
                         endTurnDelay.setMaxTimeMillis( FRAME_DELAY );
                     } else {
                         turnEnding = true;
-                        return appliedAction;
+                        return true;
                     }
                 }
 
@@ -344,19 +344,40 @@ public class Game {
 
             boolean ended = ( action != null && action.getActionType() == END_TURN );
 
-            if (!ended && action != null && !VISUALS || frame != null && ( action != null && !( action.getActionType() == ATTACK ) ||
-                    ( action = frame.getAnimatedAction() ) != null )) {
-                // Play the action in the game and update the available actions list and observations
-                // Some actions are animated, the condition above checks if this animation is finished and retrieves
-                // the action after all the GUI updates.
-                gs.next( action );
-                gs.computePlayerActions( tribe );
-                updateAssignedGameStates();
-                appliedAction = true;
-            } else {
+            if (ended) {
                 turnEnding = true;
-                return appliedAction;
+                return true;
+            } else {
+                if (action != null) {
+                    if (!VISUALS || ( frame != null && action.getActionType() != ATTACK )) {
+                        gs.next( action );
+                        gs.computePlayerActions( tribe );
+                        updateAssignedGameStates();
+                        appliedAction = true;
+                    } else if (VISUALS && frame != null && action.getActionType() == ATTACK) {
+                        boolean showAllBoard = Constants.GUI_FORCE_FULL_OBS || Constants.PLAY_WITH_FULL_OBS;
+
+                        if (showAllBoard) frame.update( getGameState( -1 ) , action );  // Full Obs
+                        else frame.update( gameStateObservations[ currentPlayerIndex ] , action );        // Partial Obs
+
+                        gs.next( action );
+                        gs.computePlayerActions( tribe );
+                        updateAssignedGameStates();
+                        appliedAction = true;
+                    }
+                }
+//                if (action != null && !VISUALS || frame != null && ( action != null && !( action.getActionType() == ATTACK ) ||
+//                        ( action = frame.getAnimatedAction() ) != null )) {
+//                    // Play the action in the game and update the available actions list and observations
+//                    // Some actions are animated, the condition above checks if this animation is finished and retrieves
+//                    // the action after all the GUI updates.
+//                    gs.next( action );
+//                    gs.computePlayerActions( tribe );
+//                    updateAssignedGameStates();
+//                    appliedAction = true;
+//                }
             }
+
             if (gameOver()) {
                 turnEnding = true;
             }
@@ -403,8 +424,6 @@ public class Game {
                 newTick = true;
             }
         }
-
-        processNewTurn();
     }
 
     private boolean checkGameOver() {
@@ -454,13 +473,13 @@ public class Game {
      * If the game is paused do to animations or the pause buttons,we will not update the
      * game with the action given for the current player.
      */
-    public boolean act( Action action ) {
+    public boolean act( Action action , boolean skipPlayersTurn ) {
         boolean gameOver = gameOver();
         boolean wasActionProcessed = false;
         if (newTick) {
             // Check end of gama and update
             boolean end = checkGameOver();
-            if (end) {
+            if (end && firstEnd) {
                 return false;
             }
 
@@ -468,7 +487,7 @@ public class Game {
         }
 
         if (!gameOver) {
-            if (action == null) {
+            if (skipPlayersTurn) {
                 // skip the turn of this player if they are finished,indicated by the null action
                 if (playerCanAct( currentPlayerIndex )) {
                     System.out.println( "Unexpected problem occurred when giving the action for the environment" );
@@ -481,7 +500,6 @@ public class Game {
                     newTick = true;
                 }
             } else {
-
                 wasActionProcessed = processAction( action );
 
                 if (turnEnding) {
@@ -489,13 +507,18 @@ public class Game {
                     processEndTurn();
                     processNewTurn();
                 }
+
+                // if we got a null action,just update the visuals and return false
+                // ignore this action
+                if (action == null) {
+                    return false;
+                }
             }
-
-            // if the game isn't over,update
-
-
         } else {
-            frame.update( getGameState( -1 ) , null );
+            if (frame != null) {
+                frame.update( getGameState( -1 ) , null );
+            }
+            return true;
         }
         return wasActionProcessed;
     }
@@ -704,6 +727,9 @@ public class Game {
             if (VISUALS && frame != null) {
                 boolean showAllBoard = Constants.GUI_FORCE_FULL_OBS || Constants.PLAY_WITH_FULL_OBS;
 
+//                System.out.println( "Paused: " + paused + " , animationPaused : " + animationPaused );
+
+
                 if (showAllBoard) frame.update( getGameState( -1 ) , action );  // Full Obs
                 else frame.update( gameStateObservations[ gs.getActiveTribeID() ] , action );        // Partial Obs
 
@@ -725,6 +751,9 @@ public class Game {
 
             if (action != null && !VISUALS || frame != null && ( action != null && !( action.getActionType() == ATTACK ) ||
                     ( action = frame.getAnimatedAction() ) != null )) {
+//                System.out.println("Old action: "+oldAction);
+//                System.out.println("New action: "+action);
+//                System.out.println("Form frame: "+frame.getAnimatedAction());
                 // Play the action in the game and update the available actions list and observations
                 // Some actions are animated, the condition above checks if this animation is finished and retrieves
                 // the action after all the GUI updates.

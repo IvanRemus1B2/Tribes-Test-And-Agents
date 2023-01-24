@@ -882,24 +882,14 @@ public class GameView extends JComponent {
     }
 
     void paintAction( UnitAction a ) {
+//        System.out.println(a+" feasible?"+a.isFeasible( gameState ));
         if (a.getActionType() == ATTACK || a.getActionType() == CONVERT || a.getActionType() == HEAL_OTHERS) {  // These are the actions currently animated
             animationSpeed.clear();
             actionAnimationUnitsTribe.clear();
             sourceTargetAnimationInfo.clear();
             animatedAction = null;
 
-            // TODO:After implementing the Human Agent i was able to see that apparently,when trying to draw an action,
-            //  specifically ATTACK ,somehow the source and target units are null,which raises an exception...Could it
-            //  be adding the human agent provoked this bugs or is it that the author updates the game state,after which
-            //  he implements the animation,which takes the units from the new board,where they might not be,leading to this?
-            //  A temporary solution,which seems to work was to abort the drawing if the source or target are null
-
             Unit source = (Unit) gameState.getBoard().getActor( a.getUnitId() );
-
-            if(source==null){
-                return;
-            }
-
             Image weapon1 = source.getType().getWeaponImage( source.getTribeId() );
 
             if (weapon1 != null) {
@@ -910,13 +900,7 @@ public class GameView extends JComponent {
                 Image weapon2 = null;
 
                 if (a.getActionType() == ATTACK) {
-
                     Unit t = (Unit) gameState.getBoard().getActor( ( (Attack) a ).getTargetId() );
-
-                    if(t==null){
-                        return;
-                    }
-
                     targets.add( t );
                     weapon2 = t.getType().getWeaponImage( t.getTribeId() );  // units can retaliate in Attack actions
 
@@ -1018,7 +1002,7 @@ public class GameView extends JComponent {
         }
     }
 
-    Action getAnimatedAction() {
+    public Action getAnimatedAction() {
         if (sourceTargetAnimationInfo.size() == 0 && animatedAction != null) {
             Action a = animatedAction.copy();
             animatedAction = null;

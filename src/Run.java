@@ -1,3 +1,4 @@
+import core.Constants;
 import core.Types;
 import core.actions.Action;
 import core.actions.tribeactions.EndTurn;
@@ -23,6 +24,8 @@ import players.portfolioMCTS.PortfolioMCTSParams;
 import players.portfolioMCTS.PortfolioMCTSPlayer;
 import players.rhea.RHEAAgent;
 import players.rhea.RHEAParams;
+
+import java.util.Arrays;
 
 import static core.Constants.*;
 import static core.Types.TRIBE.*;
@@ -62,6 +65,7 @@ class Run {
     }
 
     static void runGameAsEnvironment( Game game , KeyController ki , ActionController ac ) {
+        // TODO:Ensure the Environment works with the TURN LIMIT as well
         WindowInput wi = null;
         GUI frame = null;
         if (VISUALS) {
@@ -74,6 +78,7 @@ class Run {
 
         game.prepareEnvironment( frame , wi );
 
+
         var agents = game.getPlayers();
         int currentPlayer = 0, noPlayers = game.getPlayers().length;
 
@@ -82,22 +87,50 @@ class Run {
             if (game.playerCanAct( currentPlayer )) {
                 Action action;
                 var agent = agents[ currentPlayer ];
+                boolean appliedAction = false;
 
-                // keep requesting an action from the current agent
+//                if(currentPlayer!=0) {
+//                    var grid=game.getGameStateFor( currentPlayer ).getBoard().getTribe( currentPlayer ).getObsGrid();
+//                    for(int i=0;i<grid.length;++i){
+//                        for(int j=0;j<grid.length;++j){
+//                            System.out.print(grid[i][j]+" ");
+//                        }
+//                        System.out.println();
+//                    }
+//                }
+
+
+                // request an action from the agent
+                action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
+
+//                if(action!=null) {
+//                    System.out.println(game.getGameStateFor( currentPlayer ).getActiveTribeID());
+//                    System.out.println( "Player " + currentPlayer + " : " + action );
+//                }
+                // keep sending the current action until the game environment has changed accordingly
+                // the case where the game is paused
                 do {
-                    action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
-                    System.out.println( action );
-                } while (action == null);
+                    appliedAction = game.act( action , false );
+                } while (!appliedAction && action != null);
 
-                game.act( action );
 
-                if (action.getActionType() == Types.ACTION.END_TURN) {
+                if (action != null && action.getActionType() == Types.ACTION.END_TURN) {
                     currentPlayer = ( currentPlayer + 1 ) % noPlayers;
                 }
             } else {
-                System.out.println( "lol" );
                 // pass null to specify that this player has finished
-                game.act( null );
+                game.act( null , true );
+                currentPlayer = ( currentPlayer + 1 ) % noPlayers;
+            }
+        }
+
+        // Used to make the game realize it is over
+        game.act( null , false );
+
+        //If we use visuals,close only after the player closes
+        if (VISUALS) {
+            while (frame != null && !frame.isClosed()) {
+                game.act( null , false );
             }
         }
     }

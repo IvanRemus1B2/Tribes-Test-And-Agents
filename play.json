@@ -1,6 +1,6 @@
 {
   "Run Mode": "Environment",
-  "Run Mode comment": "PlayLG / PlayFile / Replay",
+  "Run Mode comment": "PlayLG / PlayFile / Replay / Environment",
   "Progressive Bias": true,
   "Pruning": true,
   "K init mult": 0.5,
@@ -13,16 +13,20 @@
   "Force End": false,
   "Population Size": 1,
   "Players": [
-    "Random",
+    "Human",
+    "Rule Based",
+    "Rule Based",
     "Random"
   ],
   "Tribes": [
     "Imperius",
-    "Xin Xi"
+    "Xin Xi",
+    "Bardur",
+    "Oumaji"
   ],
   "Verbose": false,
   "Replay File Name": "save/1590072023986/0_0/game.json",
-  "Level File": "levels/SampleLevel2p.csv",
+  "Level File": "levels/SampleLevel4p_2.csv",
   "Game Seed": "-1",
   "Agents Seed": "-1",
   "Level Seed": "-1"
