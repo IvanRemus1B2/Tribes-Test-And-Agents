@@ -1,7 +1,4 @@
-import core.Constants;
 import core.Types;
-import core.actions.Action;
-import core.actions.tribeactions.EndTurn;
 import core.game.Game;
 import org.json.JSONArray;
 import players.*;
@@ -24,8 +21,8 @@ import players.portfolioMCTS.PortfolioMCTSParams;
 import players.portfolioMCTS.PortfolioMCTSPlayer;
 import players.rhea.RHEAAgent;
 import players.rhea.RHEAParams;
-
-import java.util.Arrays;
+import players.srhea.SRHEAAgent;
+import players.srhea.SRHEAParams;
 
 import static core.Constants.*;
 import static core.Types.TRIBE.*;
@@ -64,78 +61,6 @@ class Run {
         g.run( null , null );
     }
 
-    static void runGameAsEnvironment( Game game , KeyController ki , ActionController ac ) {
-        // TODO:Ensure the Environment works with the TURN LIMIT as well
-        WindowInput wi = null;
-        GUI frame = null;
-        if (VISUALS) {
-            wi = new WindowInput();
-            wi.windowClosed = false;
-            frame = new GUI( game , "Tribes" , ki , wi , ac , false );
-            frame.addWindowListener( wi );
-            frame.addKeyListener( ki );
-        }
-
-        game.prepareEnvironment( frame , wi );
-
-
-        var agents = game.getPlayers();
-        int currentPlayer = 0, noPlayers = game.getPlayers().length;
-
-        while (!game.gameOver()) {
-
-            if (game.playerCanAct( currentPlayer )) {
-                Action action;
-                var agent = agents[ currentPlayer ];
-                boolean appliedAction = false;
-
-//                if(currentPlayer!=0) {
-//                    var grid=game.getGameStateFor( currentPlayer ).getBoard().getTribe( currentPlayer ).getObsGrid();
-//                    for(int i=0;i<grid.length;++i){
-//                        for(int j=0;j<grid.length;++j){
-//                            System.out.print(grid[i][j]+" ");
-//                        }
-//                        System.out.println();
-//                    }
-//                }
-
-
-                // request an action from the agent
-                action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
-
-//                if(action!=null) {
-//                    System.out.println(game.getGameStateFor( currentPlayer ).getActiveTribeID());
-//                    System.out.println( "Player " + currentPlayer + " : " + action );
-//                }
-                // keep sending the current action until the game environment has changed accordingly
-                // the case where the game is paused
-                do {
-                    appliedAction = game.act( action , false );
-                } while (!appliedAction && action != null);
-
-
-                if (action != null && action.getActionType() == Types.ACTION.END_TURN) {
-                    currentPlayer = ( currentPlayer + 1 ) % noPlayers;
-                }
-            } else {
-                // pass null to specify that this player has finished
-                game.act( null , true );
-                currentPlayer = ( currentPlayer + 1 ) % noPlayers;
-            }
-        }
-
-        // Used to make the game realize it is over
-        game.act( null , false );
-
-        //If we use visuals,close only after the player closes
-        if (VISUALS) {
-            while (frame != null && !frame.isClosed()) {
-                game.act( null , false );
-            }
-        }
-    }
-
-
     public enum PlayerType {
         DONOTHING,
         HUMAN,
@@ -148,7 +73,8 @@ class Run {
         OEP,
         EMCTS,
         PORTFOLIO_MCTS,
-        INTERACTION
+        INTERACTION,
+        SRHEA
     }
 
     public static double K_INIT_MULT = 0.5;
@@ -191,6 +117,8 @@ class Run {
                 return Run.PlayerType.EMCTS;
             case "Interaction":
                 return PlayerType.INTERACTION;
+            case "SRHEA":
+                return PlayerType.SRHEA;
         }
         throw new Exception( "Error: unrecognized Player Type: " + arg );
     }
@@ -241,7 +169,7 @@ class Run {
             case RANDOM:
                 return new RandomAgent( agentSeed );
             case SIMPLE:
-                return new SimpleAgent( agentSeed );
+                return new SimpleAgentV1( agentSeed );
             case OSLA:
                 OSLAParams oslaParams = new OSLAParams();
                 oslaParams.stop_type = oslaParams.STOP_FMCALLS; //Upper bound
@@ -296,12 +224,16 @@ class Run {
                 RHEAParams rheaParams = new RHEAParams();
                 rheaParams.stop_type = rheaParams.STOP_FMCALLS;
                 rheaParams.heuristic_method = rheaParams.DIFF_HEURISTIC;
-                rheaParams.INDIVIDUAL_LENGTH = MAX_LENGTH;
                 rheaParams.FORCE_TURN_END = rheaParams.INDIVIDUAL_LENGTH + 1;
-                rheaParams.POP_SIZE = POP_SIZE;
                 return new RHEAAgent( agentSeed , rheaParams );
             case INTERACTION:
                 return new InteractionAgent( agentSeed );
+            case SRHEA:
+                SRHEAParams srheaParams = new SRHEAParams();
+                srheaParams.stop_type = srheaParams.STOP_FMCALLS;
+                srheaParams.heuristic_method = srheaParams.DIFF_HEURISTIC;
+                srheaParams.FORCE_TURN_END = srheaParams.INDIVIDUAL_LENGTH + 1;
+                return new SRHEAAgent( agentSeed , srheaParams );
         }
         return null;
     }

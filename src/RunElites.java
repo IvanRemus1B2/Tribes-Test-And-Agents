@@ -269,7 +269,7 @@ public class RunElites {
 
         ArrayList<Agent> players = getPlayers(playerTypes);
 
-        Game game = new Game( Game.GameType.SIMULATION);
+        Game game = new Game();
 
         long levelGenSeed = levelSeed;
         if(levelGenSeed == -1)
