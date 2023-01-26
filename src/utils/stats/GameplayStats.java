@@ -282,7 +282,7 @@ public class GameplayStats {
 
     public void print()
     {
-        //ACTION COUNTS
+//        ACTION COUNTS
         System.out.println("Total Action count: ");
         for(Types.ACTION actionType : actionsCount.keySet())
         {
@@ -302,14 +302,14 @@ public class GameplayStats {
         }
 
         //SUBACTIONS
-        System.out.println("Subactions: ");
-        for(String key : actionSubtypes)
-        {
-            System.out.print(key + ":" + actionSubtypeCount.get(key) + ";");
-            HashMap<Integer, Integer> turnCount = actionSubtypeCountTurn.get(key);
-            printTurns(turnCount);
-            System.out.println();
-        }
+//        System.out.println("Subactions: ");
+//        for(String key : actionSubtypes)
+//        {
+//            System.out.print(key + ":" + actionSubtypeCount.get(key) + ";");
+//            HashMap<Integer, Integer> turnCount = actionSubtypeCountTurn.get(key);
+//            printTurns(turnCount);
+//            System.out.println();
+//        }
 
     }
 
