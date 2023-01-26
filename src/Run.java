@@ -173,12 +173,12 @@ class Run {
             case OSLA:
                 OSLAParams oslaParams = new OSLAParams();
                 oslaParams.stop_type = oslaParams.STOP_FMCALLS; //Upper bound
-                oslaParams.heuristic_method = oslaParams.DIFF_HEURISTIC;
+                oslaParams.heuristic_method = oslaParams.DIFF_HEURISTIC_V1;
                 return new OneStepLookAheadAgent( agentSeed , oslaParams );
             case MC:
                 MCParams mcparams = new MCParams();
                 mcparams.stop_type = mcparams.STOP_FMCALLS;
-                mcparams.heuristic_method = mcparams.DIFF_HEURISTIC;
+                mcparams.heuristic_method = mcparams.DIFF_HEURISTIC_V1;
                 mcparams.PRIORITIZE_ROOT = true;
                 mcparams.ROLLOUT_LENGTH = MAX_LENGTH;
                 mcparams.FORCE_TURN_END = FORCE_TURN_END ? 5 : mcparams.ROLLOUT_LENGTH + 1;
@@ -186,7 +186,7 @@ class Run {
             case MCTS:
                 MCTSParams mctsParams = new MCTSParams();
                 mctsParams.stop_type = mctsParams.STOP_FMCALLS;
-                mctsParams.heuristic_method = mctsParams.DIFF_HEURISTIC;
+                mctsParams.heuristic_method = mctsParams.DIFF_HEURISTIC_V1;
                 mctsParams.PRIORITIZE_ROOT = true;
                 mctsParams.ROLLOUT_LENGTH = MAX_LENGTH;
                 mctsParams.FORCE_TURN_END = FORCE_TURN_END ? 5 : mctsParams.ROLLOUT_LENGTH + 1;
@@ -195,7 +195,7 @@ class Run {
             case PORTFOLIO_MCTS:
                 PortfolioMCTSParams portfolioMCTSParams = new PortfolioMCTSParams();
                 portfolioMCTSParams.stop_type = portfolioMCTSParams.STOP_FMCALLS;
-                portfolioMCTSParams.heuristic_method = portfolioMCTSParams.DIFF_HEURISTIC;
+                portfolioMCTSParams.heuristic_method = portfolioMCTSParams.DIFF_HEURISTIC_V1;
                 portfolioMCTSParams.PRIORITIZE_ROOT = false;
                 portfolioMCTSParams.ROLLOUT_LENGTH = MAX_LENGTH;
                 portfolioMCTSParams.PRUNING = PRUNING;
@@ -213,25 +213,25 @@ class Run {
             case OEP:
                 OEPParams oepParams = new OEPParams();
                 oepParams.stop_type = oepParams.STOP_FMCALLS;
-                oepParams.heuristic_method = oepParams.DIFF_HEURISTIC;
+                oepParams.heuristic_method = oepParams.DIFF_HEURISTIC_V1;
                 return new OEPAgent( agentSeed , oepParams );
             case EMCTS:
                 EMCTSParams emctsParams = new EMCTSParams();
                 emctsParams.stop_type = emctsParams.STOP_FMCALLS;
-                emctsParams.heuristic_method = emctsParams.DIFF_HEURISTIC;
+                emctsParams.heuristic_method = emctsParams.DIFF_HEURISTIC_V1;
                 return new EMCTSAgent( agentSeed , emctsParams );
             case RHEA:
                 RHEAParams rheaParams = new RHEAParams();
-                rheaParams.stop_type = rheaParams.STOP_FMCALLS;
-                rheaParams.heuristic_method = rheaParams.DIFF_HEURISTIC;
+                rheaParams.stop_type = rheaParams.STOP_ITERATIONS;
+                rheaParams.heuristic_method = rheaParams.DIFF_HEURISTIC_V1;
                 rheaParams.FORCE_TURN_END = rheaParams.INDIVIDUAL_LENGTH + 1;
                 return new RHEAAgent( agentSeed , rheaParams );
             case INTERACTION:
                 return new InteractionAgent( agentSeed );
             case SRHEA:
                 SRHEAParams srheaParams = new SRHEAParams();
-                srheaParams.stop_type = srheaParams.STOP_FMCALLS;
-                srheaParams.heuristic_method = srheaParams.DIFF_HEURISTIC;
+                srheaParams.stop_type = srheaParams.STOP_ITERATIONS;
+                srheaParams.heuristic_method = srheaParams.DIFF_HEURISTIC_V1;
                 srheaParams.FORCE_TURN_END = srheaParams.INDIVIDUAL_LENGTH + 1;
                 return new SRHEAAgent( agentSeed , srheaParams );
         }

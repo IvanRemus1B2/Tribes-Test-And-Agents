@@ -1,5 +1,5 @@
 {
-  "Run Mode": "PlayFile",
+  "Run Mode": "PlayLG",
   "Run Mode comment": "PlayLG / PlayFile / Replay / Environment",
   "Progressive Bias": true,
   "Pruning": true,
@@ -14,7 +14,7 @@
   "Population Size": 100,
   "Players": [
     "SRHEA",
-    "RHEA"
+    "Rule Based"
   ],
   "Tribes": [
     "Imperius",

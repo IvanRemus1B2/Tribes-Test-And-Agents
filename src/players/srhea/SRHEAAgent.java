@@ -197,19 +197,21 @@ public class SRHEAAgent extends Agent {
         // TODO:Shift the actions of all individuals,not just the first one
         //  This should be done in a way to balance the exploitation(mutation of the elite)
         //  and exploration(how many individuals will be chosen at random)
-        shift( gameState , population.get( 0 ) );
-        newPopulation.add( population.get( 0 ) );
+        for ( int index = 0 ; index < params.ELITE_SIZE ; index++ ) {
+            shift( gameState , population.get( index ) );
+            newPopulation.add( population.get( index ) );
+        }
 
         // Add a number of individuals that are mutated from the best individual currently
         // Exploitation
-        for ( int index = 1 ; index < 1 + params.MUTATE_BEST && index < params.POP_SIZE ; index++ ) {
+        for ( int index = params.ELITE_SIZE ; index < params.ELITE_SIZE + params.MUTATE_BEST && index < params.POP_SIZE ; index++ ) {
             Individual ind = mutate( population.get( 0 ) , gameState );
             newPopulation.add( ind );
         }
 
         // The rest,add random individuals
         // Exploration
-        for ( int index = 1 + params.MUTATE_BEST ; index < params.POP_SIZE ; index++ ) {
+        for ( int index = params.ELITE_SIZE + params.MUTATE_BEST ; index < params.POP_SIZE ; index++ ) {
             newPopulation.add( createIndividual( gameState , params.SHIFT_RANDOM_PROBABILITY ) );
         }
 
@@ -331,6 +333,7 @@ public class SRHEAAgent extends Agent {
             } else if (params.stop_type == params.STOP_ITERATIONS) {
                 end = ( noIterations >= params.num_iterations );
             }
+//            System.out.println("End?"+end);
         }
 
         // last sort,to ensure we have the order by the best individuals
@@ -354,16 +357,39 @@ public class SRHEAAgent extends Agent {
             if (params.POP_SIZE > 1) {
                 // create a new individual by doing cross over between 2 parents chosen from a tournament
 
-                // the first parent
-                int indexParent1 = tournamentSelection( new ArrayList<>() );
+                int indexParent1 = 0, indexParent2 = 0;
+                if (params.selection_type == SRHEAParams.SELECTION_TYPE.TOURNAMENT) {
+                    // the first parent
+                    indexParent1 = tournamentSelection( new ArrayList<>() );
 
-                List<Integer> excluded = new ArrayList<>();
-                excluded.add( indexParent1 );
+                    List<Integer> excluded = new ArrayList<>();
+                    excluded.add( indexParent1 );
 
-                // the second parent excluding the first parent
-                int indexParent2 = tournamentSelection( excluded );
+                    // the second parent excluding the first parent
+                    indexParent2 = tournamentSelection( excluded );
+                } else if (params.selection_type == SRHEAParams.SELECTION_TYPE.ROULETTE_WHEEL) {
+                    // the first parent
+                    indexParent1 = rouletteWheelSelection( new ArrayList<>() );
 
-                newIndividual = uniformCrossOver( gameState , indexParent1 , indexParent2 );
+                    List<Integer> excluded = new ArrayList<>();
+                    excluded.add( indexParent1 );
+
+                    // the second parent excluding the first parent
+                    indexParent2 = rouletteWheelSelection( excluded );
+                } else {
+                    System.out.println( "SRHEA : Unknown selection type" );
+                    System.exit( 2 );
+                }
+
+                if (params.crossover_type == SRHEAParams.CROSSOVER_TYPE.UNIFORM) {
+                    newIndividual = uniformCrossOver( gameState , indexParent1 , indexParent2 );
+                } else if (params.crossover_type == SRHEAParams.CROSSOVER_TYPE.COMBINATORIAL) {
+                    newIndividual = combinatorialCrossOver( gameState , indexParent1 , indexParent2 );
+                } else {
+                    System.out.println( "SRHEA : Unknown crossover type" );
+                    System.exit( 2 );
+                }
+
                 newPopulation.add( newIndividual );
             } else if (params.POP_SIZE == 1) {
 
@@ -379,6 +405,8 @@ public class SRHEAAgent extends Agent {
 
             newPopulation.add( newIndividual );
         }
+
+        System.out.println( "hi" );
 
         return newPopulation;
     }
@@ -419,7 +447,58 @@ public class SRHEAAgent extends Agent {
         return bestIndex;
     }
 
-    // TODO: Add Roulette Wheel Selection
+    /**
+     * Select an individual proportionally to his fitness by comparison with the fitness of the others.The
+     * excluded individuals will get a fitness of 0,thus will not be selected
+     *
+     * @param excluded the indexes of the individuals excluded
+     * @return the chosen individual
+     */
+    private int rouletteWheelSelection( List<Integer> excluded ) {
+        if (params.POP_SIZE < 1) {
+            System.out.println( "The number of individuals should be at least 1" );
+            System.exit( 1 );
+        }
+
+        // keep the summed scores from the start to an index
+        Double[] summedScores = new Double[ params.POP_SIZE ];
+
+        // the summed probabilities from the start to an index
+        Double[] probabilities = new Double[ params.POP_SIZE ];
+
+        // the difference with which to add such that the values are at least 1
+        double difference = 1;
+
+        // for the indexes that are excluded,just give their score as 0,meaning they will never be chosen proportionally
+        summedScores[ 0 ] = ( excluded.contains( 0 ) ? 0 : population.get( 0 ).getValue() + difference );
+        for ( int index = 1 ; index < params.POP_SIZE ; index++ ) {
+            double score = ( excluded.contains( index ) ? 0 : population.get( index ).getValue() + difference );
+            summedScores[ index ] = score + summedScores[ index - 1 ];
+        }
+
+        double totalSum = summedScores[ params.POP_SIZE - 1 ];
+        for ( int index = 0 ; index < params.POP_SIZE ; index++ ) {
+            probabilities[ index ] = 1.0 * summedScores[ index ] / totalSum;
+        }
+
+        // make sure that they add up to 1 at the end
+        probabilities[ params.POP_SIZE - 1 ] = 1.0;
+
+        // choose an individual at random,proportionate to the score given
+        double chance = randomGenerator.nextDouble();
+
+        int chosenIndividual = 0;
+        while (chosenIndividual < params.POP_SIZE && chance > probabilities[ chosenIndividual ]) {
+            chosenIndividual++;
+        }
+
+        if (chosenIndividual == params.POP_SIZE) {
+            System.out.println( "Problem at the roulette wheel selection,the chosen action index should never reach the value" + params.POP_SIZE );
+            System.exit( 1 );
+        }
+
+        return chosenIndividual;
+    }
 
     /**
      * Given a game state and the indexes of 2 parents,create an offspring with the genes
@@ -470,10 +549,6 @@ public class SRHEAAgent extends Agent {
 
             if (isFeasible && candidate != null) {
                 advance( gameStateCopy , candidate );
-
-                // TODO:Why check the feasibility if the candidate is already considered feasible?
-                checkActionFeasibility( candidate , gameStateCopy );
-
                 actions.add( candidate );
             }
 
@@ -493,7 +568,103 @@ public class SRHEAAgent extends Agent {
         return newIndividual;
     }
 
-    // TODO: Add a different time of cross over
+    /**
+     * Idea:Focus on trying to place actions that are feasible from both parents to the child,delaying adding random actions
+     * as much as possible.Place random actions only after trying to add all the actions from the parents.So the order becomes:
+     *
+     * @param gameState    the game state
+     * @param indexParent1 the index of the parent 1 in the population
+     * @param indexParent2 the index of the parent 2 in the population
+     * @return the new individual
+     */
+    private Individual combinatorialCrossOver( GameState gameState , int indexParent1 , int indexParent2 ) {
+        ArrayList<Action> actions = new ArrayList<>();
+
+        Individual[] parents = { population.get( indexParent1 ) , population.get( indexParent2 ) };
+
+        int index1, index2;
+
+        index1 = index2 = 0;
+
+        GameState gameStateCopy = gameState.copy();
+
+        // while we haven't got to the end of either parent's actions
+        while (!gameStateCopy.isGameOver() && actions.size() < params.INDIVIDUAL_LENGTH && index1 < parents[ 0 ].getActions().size() && index2 < parents[ 1 ].getActions().size()) {
+            Action action1, action2;
+            boolean feasibleFrom1, feasibleFrom2;
+
+            action1 = parents[ 0 ].getActions().get( index1 );
+            feasibleFrom1 = checkActionFeasibility( action1 , gameStateCopy );
+
+            action2 = parents[ 1 ].getActions().get( index2 );
+            feasibleFrom2 = checkActionFeasibility( action2 , gameStateCopy );
+
+            if (feasibleFrom1 || feasibleFrom2) {
+                //both are feasible,choose one action to add
+                int takeFrom = 0;
+                if (feasibleFrom1 && feasibleFrom2) {
+                    takeFrom = randomGenerator.nextInt( 2 );
+                } else if (feasibleFrom2) {
+                    takeFrom = 1;
+                }
+
+                int index = ( takeFrom == 0 ? index1 : index2 );
+
+                Action candidate = parents[ takeFrom ].getActions().get( index );
+
+                // advance the game state with the candidate chosen
+                actions.add( candidate );
+                advance( gameStateCopy , candidate );
+
+                if (takeFrom == 0) {
+                    index1++;
+                } else {
+                    index2++;
+                }
+            } else {
+                // no action is feasible,so skip for now
+                index1++;
+                index2++;
+            }
+        }
+
+        // while there are still actions in parent 1,add them if they are feasible
+        while (!gameStateCopy.isGameOver() && index1 < parents[ 0 ].getActions().size() && actions.size() < params.INDIVIDUAL_LENGTH) {
+            Action candidate = parents[ 0 ].getActions().get( index1 );
+            boolean isFeasible = checkActionFeasibility( candidate , gameStateCopy );
+
+            if (isFeasible) {
+                actions.add( candidate );
+                advance( gameStateCopy , candidate );
+            }
+
+            index1++;
+        }
+
+        // while there are still actions in parent 2,add them if they are feasible
+        while (!gameStateCopy.isGameOver() && index2 < parents[ 1 ].getActions().size() && actions.size() < params.INDIVIDUAL_LENGTH) {
+            Action candidate = parents[ 1 ].getActions().get( index2 );
+            boolean isFeasible = checkActionFeasibility( candidate , gameStateCopy );
+
+            if (isFeasible) {
+                actions.add( candidate );
+                advance( gameStateCopy , candidate );
+            }
+
+            index2++;
+        }
+
+        // while the list of actions still has room for more actions,choose at random
+        while (!gameStateCopy.isGameOver() && actions.size() < params.INDIVIDUAL_LENGTH) {
+            Action action = getRandomAction( gameStateCopy );
+            advance( gameStateCopy , action );
+            actions.add( action );
+        }
+
+        Individual newIndividual = new Individual( actions );
+        newIndividual.setValue( heuristic.evaluateState( gameState , gameStateCopy ) );
+        return newIndividual;
+    }
 
     private double noise( double input , double epsilon , double random ) {
         return ( input + epsilon ) * ( 1.0 + epsilon * ( random - 0.5 ) );

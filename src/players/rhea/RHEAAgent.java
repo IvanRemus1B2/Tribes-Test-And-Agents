@@ -274,6 +274,7 @@ public class RHEAAgent extends Agent {
 
             if (feasibleAction && candidate != null) {
                 advance( crossState , candidate , true );
+                // TODO:Why check the feasibility if the candidate is already considered feasible?
                 checkActionFeasibility( candidate , crossState );
                 newIndividual.add( candidate );
             } //ELSE: Still not feasible: SKIP

@@ -11,12 +11,12 @@ import java.util.ArrayList;
  * An entropy of 0 means the gamestates are identical in terms of the metrics being compared, positive entropy means
  * that some metrics in the new gamestate have increased.
  */
-public class TribesDiffHeuristic implements StateHeuristic {
+public class TribesDiffHeuristicV1 implements StateHeuristic {
 
     private int playerID;
     ArrayList<Integer> allIds;
 
-    public TribesDiffHeuristic(int playerID, ArrayList<Integer> allIds)
+    public TribesDiffHeuristicV1( int playerID, ArrayList<Integer> allIds)
     {
         this.allIds = allIds;
         this.playerID = playerID;

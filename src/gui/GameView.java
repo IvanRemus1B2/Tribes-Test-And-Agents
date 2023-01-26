@@ -896,10 +896,9 @@ public class GameView extends JComponent {
             //  he implements the animation,which takes the units from the new board,where they might not be,leading to this?
             //  A temporary solution,which seems to work was to abort the drawing if the source or target are null
 
-            Unit t = (Unit) gameState.getBoard().getActor(((Attack) a).getTargetId());
             Unit source = (Unit) gameState.getBoard().getActor(a.getUnitId());
 
-            if(source==null||t==null){
+            if(source==null){
                 return;
             }
 
@@ -913,7 +912,14 @@ public class GameView extends JComponent {
                 Image weapon2 = null;
 
                 if (a.getActionType() == ATTACK) {
-                    t = (Unit) gameState.getBoard().getActor(((Attack) a).getTargetId());
+
+                    Unit t = (Unit) gameState.getBoard().getActor(((Attack) a).getTargetId());
+
+                    if(t==null){
+                        game.setAnimationPaused( false );
+                        return;
+                    }
+
                     targets.add(t);
                     weapon2 = t.getType().getWeaponImage(t.getTribeId());  // units can retaliate in Attack actions
 

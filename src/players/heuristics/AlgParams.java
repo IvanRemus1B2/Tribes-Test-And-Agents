@@ -1,7 +1,6 @@
 package players.heuristics;
 
 import core.Types;
-import players.portfolio.Portfolio;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,14 +13,15 @@ public class AlgParams {
 
     public final int ENTROPY_HEURISTIC = 0;
     public final int SIMPLE_HEURISTIC = 1;
-    public final int DIFF_HEURISTIC = 2;
-    public int heuristic_method = SIMPLE_HEURISTIC;
+    public final int DIFF_HEURISTIC_V1 = 2;
+    public final int DIFF_HEURISTIC_V2 = 3;
+    public int heuristic_method = DIFF_HEURISTIC_V2;
 
     public double epsilon = 1e-6;
 
     // Budget settings
     public int stop_type = STOP_TIME;
-    public int num_iterations = 200;
+    public int num_iterations = 5;
     public int num_fmcalls = 2000;
     public int num_time = 40;
     public int FORCE_TURN_END = 5;
@@ -55,8 +55,10 @@ public class AlgParams {
             return new TribesEntropyHeuristic( playerID , allIDs );
         else if (heuristic_method == SIMPLE_HEURISTIC) // New method: combined heuristics
             return new TribesSimpleHeuristic( playerID , allIDs );
-        else if (heuristic_method == DIFF_HEURISTIC)
-            return new TribesDiffHeuristic( playerID , allIDs );
+        else if (heuristic_method == DIFF_HEURISTIC_V1)
+            return new TribesDiffHeuristicV1( playerID , allIDs );
+        else if (heuristic_method == DIFF_HEURISTIC_V2)
+            return new TribesDiffHeuristicV2( playerID , allIDs );
         return null;
     }
 
