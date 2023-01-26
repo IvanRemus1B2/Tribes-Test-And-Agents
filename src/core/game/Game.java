@@ -244,8 +244,8 @@ public class Game {
 
                                 String[] agentChunks = players[ gps.getPlayerID() ].getClass().toString().split( "\\." );
                                 String agentName = agentChunks[ agentChunks.length - 1 ];
-                                System.out.println( "GPS:" + gps.getPlayerID() + ":" + agentName + ":" + f + ":" + val );
-                            }
+//                                System.out.println( "GPS:" + gps.getPlayerID() + ":" + agentName + ":" + f + ":" + val );
+                           }
                         }
 
 

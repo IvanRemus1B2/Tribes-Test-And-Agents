@@ -301,15 +301,15 @@ public class GameplayStats {
             System.out.println();
         }
 
-        //SUBACTIONS
-        System.out.println("Subactions: ");
-        for(String key : actionSubtypes)
-        {
-            System.out.print(key + ":" + actionSubtypeCount.get(key) + ";");
-            HashMap<Integer, Integer> turnCount = actionSubtypeCountTurn.get(key);
-            printTurns(turnCount);
-            System.out.println();
-        }
+//        //SUBACTIONS
+//        System.out.println("Subactions: ");
+//        for(String key : actionSubtypes)
+//        {
+//            System.out.print(key + ":" + actionSubtypeCount.get(key) + ";");
+//            HashMap<Integer, Integer> turnCount = actionSubtypeCountTurn.get(key);
+//            printTurns(turnCount);
+//            System.out.println();
+//        }
 
     }
 

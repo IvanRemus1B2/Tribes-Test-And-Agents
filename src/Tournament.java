@@ -151,7 +151,7 @@ public class Tournament {
 
     private void run( int repetitions , boolean shift ) throws FileNotFoundException {
 
-        File file = new File( "runStats/RHEA_VS_SHREA.txt" );
+        File file = new File( "runStats/RB_VS_Random.txt" );
         PrintStream stream = new PrintStream( file );
         System.setOut( stream );
 
