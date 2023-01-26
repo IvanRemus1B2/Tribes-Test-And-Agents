@@ -15,6 +15,7 @@ import core.actors.units.Unit;
 import core.game.Board;
 import core.game.Game;
 import core.game.GameState;
+import players.heuristics.AlgParams;
 import utils.ElapsedCpuTimer;
 import utils.Vector2d;
 
@@ -52,7 +53,7 @@ public class SimpleAgentV2 extends Agent {
     @Override
     public Action act( GameState gs , ElapsedCpuTimer ect ) {
         //Gather all available actions:
-        ArrayList<Action> allActions = gs.getAllAvailableActions();
+        ArrayList<Action> allActions = this.allGoodActions( gs , AlgParams.excludedActions );
         int nActions = allActions.size();
         //Initially pick a random action so that at least that can be returned
         //Action bestAction = allActions.get(m_rnd.nextInt(nActions));

@@ -103,8 +103,6 @@ public class SRHEAAgent extends Agent {
             double chance = randomGenerator.nextDouble();
             Action action = ( chance <= probabilityRandom ? getRandomAction( gameStateCopy ) : getRuleBasedProportionateAction( gameStateCopy ) );
 
-            // TODO:After we choose EndTurn action,does this game state simulate the following
-            //  players actions until it gets back to use to choose an action?
             advance( gameStateCopy , action );
 
             actions.add( action );
@@ -194,24 +192,21 @@ public class SRHEAAgent extends Agent {
     private ArrayList<Individual> shiftPopulation( GameState gameState ) {
         ArrayList<Individual> newPopulation = new ArrayList<>();
 
-        // TODO:Shift the actions of all individuals,not just the first one
-        //  This should be done in a way to balance the exploitation(mutation of the elite)
-        //  and exploration(how many individuals will be chosen at random)
-        for ( int index = 0 ; index < params.ELITE_SIZE ; index++ ) {
+        for ( int index = 0 ; index < params.SHIFT_MOVED_SIZE ; index++ ) {
             shift( gameState , population.get( index ) );
             newPopulation.add( population.get( index ) );
         }
 
         // Add a number of individuals that are mutated from the best individual currently
         // Exploitation
-        for ( int index = params.ELITE_SIZE ; index < params.ELITE_SIZE + params.MUTATE_BEST && index < params.POP_SIZE ; index++ ) {
+        for ( int index = params.SHIFT_MOVED_SIZE ; index < params.SHIFT_MOVED_SIZE + params.MUTATE_BEST && index < params.POP_SIZE ; index++ ) {
             Individual ind = mutate( population.get( 0 ) , gameState );
             newPopulation.add( ind );
         }
 
         // The rest,add random individuals
         // Exploration
-        for ( int index = params.ELITE_SIZE + params.MUTATE_BEST ; index < params.POP_SIZE ; index++ ) {
+        for ( int index = params.SHIFT_MOVED_SIZE + params.MUTATE_BEST ; index < params.POP_SIZE ; index++ ) {
             newPopulation.add( createIndividual( gameState , params.SHIFT_RANDOM_PROBABILITY ) );
         }
 
@@ -235,10 +230,6 @@ public class SRHEAAgent extends Agent {
                 index++;
             }
         }
-
-        // TODO:If we find an action that is not feasible at some index ,we should
-        //  discard the actions that follow...so why not add them from the index onward
-        //  instead of at the end of all actions?
 
         while (!gameStateCopy.isGameOver() && index < params.INDIVIDUAL_LENGTH) {
             var newAction = getRandomAction( gameStateCopy );
@@ -405,8 +396,6 @@ public class SRHEAAgent extends Agent {
 
             newPopulation.add( newIndividual );
         }
-
-        System.out.println( "hi" );
 
         return newPopulation;
     }

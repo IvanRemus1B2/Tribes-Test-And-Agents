@@ -96,6 +96,9 @@ public class RHEAAgent extends Agent {
 
         while (!gsCopy.isGameOver() && actions.size() < params.INDIVIDUAL_LENGTH) {
             Action a = getRandomAction( gsCopy );
+
+            // TODO:After we choose EndTurn action,does this game state simulate the following
+            //  players actions until it gets back to use to choose an action?
             advance( gsCopy , a , true );
             actions.add( a );
         }
@@ -147,6 +150,9 @@ public class RHEAAgent extends Agent {
         int i = j;
         while (!clone.isGameOver() && i < params.INDIVIDUAL_LENGTH) {
             Action newAction = getRandomAction( clone );
+            // TODO:If we find an action that is not feasible at some index ,we should
+            //  discard the actions that follow...so why not add them from the index onward
+            //  instead of at the end of all actions?
             individual.getActions().add( newAction );
             advance( clone , newAction , true );
             i++;

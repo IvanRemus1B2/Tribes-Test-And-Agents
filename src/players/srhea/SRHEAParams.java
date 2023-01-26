@@ -11,6 +11,10 @@ public class SRHEAParams extends AlgParams {
     public int MUTATE_BEST = 10;
     public int ELITE_SIZE = 5;
 
+    // the first individuals to attempt to copy over from the previous generation,as
+    // an attempt to preserve the information gained previously
+    public int SHIFT_MOVED_SIZE = 30;
+
     // When initializing the population,we choose for an individual with this probability
     // whether the action is chosen randomly or proportionally using the evaluator for the score of each action
     // If 1,then all actions are random
@@ -43,5 +47,8 @@ public class SRHEAParams extends AlgParams {
         System.out.println( "\tMutate best: " + MUTATE_BEST );
         System.out.println( "\tElite size: " + ELITE_SIZE );
         System.out.println( "\tThe probability to choose an action at the initialization of the population randomly or proportionally to a score is: " + INIT_RANDOM_PROBABILITY );
+        System.out.println( "\tThe probability to choose an action at the shift faze of the population randomly or proportionally to a score is:  " + SHIFT_RANDOM_PROBABILITY );
+        System.out.println( "\tSelection operator: " + selection_type );
+        System.out.println( "\tCrossOver operator: " + crossover_type );
     }
 }
