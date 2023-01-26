@@ -401,6 +401,19 @@ public class GUI extends JFrame {
             otherInfo.setText("");  // Reset info
         }
 
+//        if (this.gs != null) {
+//            if (a != null) {
+//                actionHistory.get(this.gs.getTick()).get(this.gs.getActiveTribeID()).add(a);
+//            }
+//            stateHistory.add(this.gs);
+//        }
+        this.gs = gs;
+        if (gs.isLevelingUp()) this.levelingUp++;
+        else this.levelingUp = 0;
+        performUpdate();
+
+        // TODO:Moves the action of attacking a unit after the methods for paint() are called
+        //  to ensure that the GameView has the latest game state
         if (a != null)
         {
             // Display result of Examine action
@@ -414,17 +427,6 @@ public class GUI extends JFrame {
                 boardView.paintAction((UnitAction)a);
             }
         }
-
-//        if (this.gs != null) {
-//            if (a != null) {
-//                actionHistory.get(this.gs.getTick()).get(this.gs.getActiveTribeID()).add(a);
-//            }
-//            stateHistory.add(this.gs);
-//        }
-        this.gs = gs;
-        if (gs.isLevelingUp()) this.levelingUp++;
-        else this.levelingUp = 0;
-        performUpdate();
 
         // Check if city is levelling up, pop up dialogue to choose options if human agent
         if (this.levelingUp == 1 && game.getPlayers()[gs.getActiveTribeID()] instanceof HumanAgent) {

@@ -95,6 +95,11 @@ public class Play {
                 } else if (runMode.equalsIgnoreCase( "Replay" )) {
                     String saveGameFile = config.getString( "Replay File Name" );
                     load( playerTypes , saveGameFile );
+
+                    //4. Run the game as an environment.From a player's perspective,it should run the same
+                } else if(runMode.equalsIgnoreCase( "Environment" )){
+                    String levelFile = config.getString( "Level File" );
+                    playAsEnvironment(levelFile,playerTypes,gameMode);
                 }
                 else {
                     System.out.println( "ERROR: run mode '" + runMode + "' not recognized." );
@@ -114,6 +119,14 @@ public class Play {
 
         Game game = _prepareGame( tribes , levelSeed , playerTypes , gameMode , ac );
         Run.runGame( game , ki , ac );
+    }
+
+    private static void playAsEnvironment( String levelFile , Run.PlayerType[] playerTypes , Types.GAME_MODE gameMode ) {
+        KeyController ki = new KeyController( true );
+        ActionController ac = new ActionController();
+
+        Game game = _prepareGame( levelFile , playerTypes , gameMode , ac );
+        Run.runGameAsEnvironment( game , ki , ac );
     }
 
     private static void play( String levelFile , Run.PlayerType[] playerTypes , Types.GAME_MODE gameMode ) {

@@ -1,4 +1,5 @@
 import core.Types;
+import core.actions.Action;
 import core.game.Game;
 import org.json.JSONArray;
 import players.*;
@@ -59,6 +60,77 @@ class Run {
      */
     static void runGame( Game g ) {
         g.run( null , null );
+    }
+
+    static void runGameAsEnvironment( Game game , KeyController ki , ActionController ac ) {
+        // TODO:Ensure the Environment works with the TURN LIMIT as well
+        WindowInput wi = null;
+        GUI frame = null;
+        if (VISUALS) {
+            wi = new WindowInput();
+            wi.windowClosed = false;
+            frame = new GUI( game , "Tribes" , ki , wi , ac , false );
+            frame.addWindowListener( wi );
+            frame.addKeyListener( ki );
+        }
+
+        game.prepareEnvironment( frame , wi );
+
+
+        var agents = game.getPlayers();
+        int currentPlayer = 0, noPlayers = game.getPlayers().length;
+
+        while (!game.gameOver()) {
+
+            if (game.playerCanAct( currentPlayer )) {
+                Action action;
+                var agent = agents[ currentPlayer ];
+                boolean appliedAction = false;
+
+//                if(currentPlayer!=0) {
+//                    var grid=game.getGameStateFor( currentPlayer ).getBoard().getTribe( currentPlayer ).getObsGrid();
+//                    for(int i=0;i<grid.length;++i){
+//                        for(int j=0;j<grid.length;++j){
+//                            System.out.print(grid[i][j]+" ");
+//                        }
+//                        System.out.println();
+//                    }
+//                }
+
+
+                // request an action from the agent
+                action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
+
+//                if(action!=null) {
+//                    System.out.println(game.getGameStateFor( currentPlayer ).getActiveTribeID());
+//                    System.out.println( "Player " + currentPlayer + " : " + action );
+//                }
+                // keep sending the current action until the game environment has changed accordingly
+                // the case where the game is paused
+                do {
+                    appliedAction = game.act( action , false );
+                } while (!appliedAction && action != null);
+
+
+                if (action != null && action.getActionType() == Types.ACTION.END_TURN) {
+                    currentPlayer = ( currentPlayer + 1 ) % noPlayers;
+                }
+            } else {
+                // pass null to specify that this player has finished
+                game.act( null , true );
+                currentPlayer = ( currentPlayer + 1 ) % noPlayers;
+            }
+        }
+
+        // Used to make the game realize it is over
+        game.act( null , false );
+
+        //If we use visuals,close only after the player closes
+        if (VISUALS) {
+            while (frame != null && !frame.isClosed()) {
+                game.act( null , false );
+            }
+        }
     }
 
     public enum PlayerType {
