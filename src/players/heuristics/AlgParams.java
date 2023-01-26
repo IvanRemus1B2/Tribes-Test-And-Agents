@@ -22,7 +22,7 @@ public class AlgParams {
     // Budget settings
     public int stop_type = STOP_TIME;
     public int num_iterations = 5;
-    public int num_fmcalls = 2000;
+    public int num_fmcalls = 10000;
     public int num_time = 40;
     public int FORCE_TURN_END = 5;
     public boolean PRIORITIZE_ROOT = false;

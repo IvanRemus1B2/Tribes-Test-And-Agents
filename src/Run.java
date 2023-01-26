@@ -169,7 +169,7 @@ class Run {
             case RANDOM:
                 return new RandomAgent( agentSeed );
             case SIMPLE:
-                return new SimpleAgentV1( agentSeed );
+                return new SimpleAgentV2( agentSeed );
             case OSLA:
                 OSLAParams oslaParams = new OSLAParams();
                 oslaParams.stop_type = oslaParams.STOP_FMCALLS; //Upper bound

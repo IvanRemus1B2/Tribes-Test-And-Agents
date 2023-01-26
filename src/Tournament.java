@@ -26,6 +26,9 @@ import utils.mapelites.Feature;
 import utils.stats.GameplayStats;
 import utils.stats.MultiStatSummary;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.*;
 
 import static core.Types.GAME_MODE.*;
@@ -36,7 +39,7 @@ import static core.Types.TRIBE.*;
  */
 public class Tournament {
 
-    public static void main( String[] args ) {
+    public static void main( String[] args ) throws FileNotFoundException {
         //Some defaults:
         Types.GAME_MODE gameMode = CAPITALS; //SCORE;
         Tournament t = new Tournament( gameMode );
@@ -146,7 +149,12 @@ public class Tournament {
     }
 
 
-    private void run( int repetitions , boolean shift ) {
+    private void run( int repetitions , boolean shift ) throws FileNotFoundException {
+
+        File file = new File( "runStats/RHEA_VS_SHREA.txt" );
+        PrintStream stream = new PrintStream( file );
+        System.setOut( stream );
+
         int starter = 0;
         int nseed = 0;
         for ( long levelSeed : seeds ) {

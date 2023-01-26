@@ -457,8 +457,8 @@ public class Game {
             String[] agentChunks = ag.getClass().toString().split( "\\." );
             String agentName = agentChunks[ agentChunks.length - 1 ];
 
-            System.out.print( " #" + rank + ": Tribe " + tribes[ tribeId ].getType() + " (" + agentName + "): " + results[ tribeId ] + ", " + sc[ tribeId ] + " points;" );
-            System.out.println( " #tech: " + tr.getNumTechsResearched() + ", #cities: " + tr.getNumCities() + ", production: " + tr.getProduction() );
+            System.out.print( " #" + rank + ": Tribe " + tribes[ tribeId ].getType() + " (" + agentName + "): " + results[ tribeId ] + ",points: " + sc[ tribeId ] );
+            System.out.println( " #tech: " + tr.getNumTechsResearched() + ", #cities: " + tr.getNumCities() + ", #production: " + tr.getProduction() );
             System.out.println( "Diplomacy - #wars: " + tribes[ tribeId ].getnWarsDeclared() + ", #stars sent: " + tribes[ tribeId ].getnStarsSent() );
             rank++;
         }

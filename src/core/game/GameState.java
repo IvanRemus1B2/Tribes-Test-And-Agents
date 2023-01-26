@@ -290,7 +290,7 @@ public class GameState {
                 executed = ac.execute(action, this);
 
             if(!executed && ac != null) {
-                System.out.println("Tick: " + this.tick + "; action [" + action + "] couldn't execute?");
+//                System.out.println("Tick: " + this.tick + "; action [" + action + "] couldn't execute?");
                 ac.execute(action, this);
             }
 
@@ -318,7 +318,7 @@ public class GameState {
                 executed = ac.execute(action, this);
 
             if(!executed && ac != null) {
-                System.out.println("FM: Action [" + action + "] couldn't execute?");
+//                System.out.println("FM: Action [" + action + "] couldn't execute?");
                 ac.execute(action, this);
                 //return false;
             }
