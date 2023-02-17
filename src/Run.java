@@ -1,6 +1,7 @@
 import core.Types;
 import core.actions.Action;
 import core.game.Game;
+import core.game.GameState;
 import org.json.JSONArray;
 import players.*;
 import gui.GUI;
@@ -85,7 +86,7 @@ class Run {
             if (game.playerCanAct( currentPlayer )) {
                 Action action;
                 var agent = agents[ currentPlayer ];
-                boolean appliedAction = false;
+                Game.ActionStatus actionStatus = Game.ActionStatus.NOT_ACKNOWLEDGED;
 
 //                if(currentPlayer!=0) {
 //                    var grid=game.getGameStateFor( currentPlayer ).getBoard().getTribe( currentPlayer ).getObsGrid();
@@ -97,6 +98,7 @@ class Run {
 //                    }
 //                }
 
+                Run.showAllActions( game.getGameStateFor( currentPlayer ) );
 
                 // request an action from the agent
                 action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
@@ -108,11 +110,11 @@ class Run {
                 // keep sending the current action until the game environment has changed accordingly
                 // the case where the game is paused
                 do {
-                    appliedAction = game.act( action , false );
-                } while (!appliedAction && action != null);
+                    actionStatus = game.act( action , false );
+//                    System.out.println(actionStatus);
+                } while (actionStatus == Game.ActionStatus.NOT_ACKNOWLEDGED && action != null);
 
-
-                if (action != null && action.getActionType() == Types.ACTION.END_TURN) {
+                if (( action != null && action.getActionType() == Types.ACTION.END_TURN ) || ( actionStatus == Game.ActionStatus.TIME_LIMIT_EXCEEDED )) {
                     currentPlayer = ( currentPlayer + 1 ) % noPlayers;
                 }
             } else {
@@ -129,6 +131,34 @@ class Run {
         if (VISUALS) {
             while (frame != null && !frame.isClosed()) {
                 game.act( null , false );
+            }
+        }
+    }
+
+    public static void showAllActions( GameState gameState ) {
+        int currentAction = 0;
+
+        System.out.println( "\nTribe actions:" );
+        var tribeActions = gameState.getTribeActions();
+        for ( var action : tribeActions ) {
+            System.out.println( "Action " + currentAction + ":" + action );
+        }
+
+        var cityActions = gameState.getCityActions();
+        System.out.println( "\nCity actions:" );
+        for ( var cityId : cityActions.keySet() ) {
+            System.out.println( "For city " + cityId );
+            for ( var action : cityActions.get( cityId ) ) {
+                System.out.println( "Action " + currentAction + ":" + action );
+            }
+        }
+
+        var unitActions = gameState.getUnitActions();
+        System.out.println( "\nUnit actions:" );
+        for ( var unitId : unitActions.keySet() ) {
+            System.out.println( "For unit " + unitId );
+            for ( var action : unitActions.get( unitId ) ) {
+                System.out.println( "Action " + currentAction + ":" + action );
             }
         }
     }

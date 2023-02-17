@@ -634,6 +634,8 @@ public class Board {
     public LinkedList<Vector2d> getCityTiles(int cityID){
         LinkedList<Vector2d> tiles = new LinkedList<>();
         City targetCity = (City) gameActors.get(cityID);
+        // TODO:In some cases,the target city gets a null value from Rule Based agents...
+        //  A trace shows this error comes from SimpleAgentV2.java line 267
         Vector2d targetCityPos = targetCity.getPosition();
         int radius = 0;
 

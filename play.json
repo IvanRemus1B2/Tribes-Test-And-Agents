@@ -13,12 +13,12 @@
   "Force End": false,
   "Population Size": 100,
   "Players": [
-    "SRHEA",
+    "Human",
     "Human"
   ],
   "Tribes": [
-    "Imperius",
-    "Xin Xi"
+    "Xin Xi",
+    "Imperius"
   ],
   "Verbose": false,
   "Replay File Name": "save/1590072023986/0_0/game.json",
