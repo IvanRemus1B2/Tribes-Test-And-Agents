@@ -64,7 +64,6 @@ class Run {
     }
 
     static void runGameAsEnvironment( Game game , KeyController ki , ActionController ac ) {
-        // TODO:Ensure the Environment works with the TURN LIMIT as well
         WindowInput wi = null;
         GUI frame = null;
         if (VISUALS) {
@@ -80,13 +79,20 @@ class Run {
 
         var agents = game.getPlayers();
         int currentPlayer = 0, noPlayers = game.getPlayers().length;
+        boolean closedByUser = false;
 
         while (!game.gameOver()) {
+
+            // The user has closed the frame,thus the game should end
+            if (VISUALS && frame != null && frame.isClosed()) {
+                closedByUser = true;
+                break;
+            }
 
             if (game.playerCanAct( currentPlayer )) {
                 Action action;
                 var agent = agents[ currentPlayer ];
-                Game.ActionStatus actionStatus = Game.ActionStatus.NOT_ACKNOWLEDGED;
+                Game.ActionStatus actionStatus;
 
 //                if(currentPlayer!=0) {
 //                    var grid=game.getGameStateFor( currentPlayer ).getBoard().getTribe( currentPlayer ).getObsGrid();
@@ -98,39 +104,44 @@ class Run {
 //                    }
 //                }
 
-                Run.showAllActions( game.getGameStateFor( currentPlayer ) );
+//                Run.showAllActions( game.getGameStateFor( currentPlayer ) );
 
-                // request an action from the agent
+                // Request an action from the agent
                 action = agent.act( game.getGameStateFor( currentPlayer ) , game.getEct() );
 
-//                if(action!=null) {
-//                    System.out.println(game.getGameStateFor( currentPlayer ).getActiveTribeID());
-//                    System.out.println( "Player " + currentPlayer + " : " + action );
-//                }
-                // keep sending the current action until the game environment has changed accordingly
-                // the case where the game is paused
+//                System.out.println( "\nTick: " + game.getGameStateFor( game.getCurrentPlayerIndex() ).getTick() );
+//                System.out.println( "Current player: " + game.getCurrentPlayerIndex() );
+//                System.out.println( "Chosen action: " + action );
+
+                // Keep sending the current action until its acknowledged(includes time limit exceeded) for the case when the game is paused or delayed
+                // and the action is not null(in the case of the human agent,where most of the time it gives null actions)
                 do {
                     actionStatus = game.act( action , false );
 //                    System.out.println(actionStatus);
                 } while (actionStatus == Game.ActionStatus.NOT_ACKNOWLEDGED && action != null);
 
-                if (( action != null && action.getActionType() == Types.ACTION.END_TURN ) || ( actionStatus == Game.ActionStatus.TIME_LIMIT_EXCEEDED )) {
+//                System.out.println( "Player " + currentPlayer + " , " + action + " -> " + actionStatus );
+
+                // If the last action made is  END TURN,change to a new player
+                if (( action != null && action.getActionType() == Types.ACTION.END_TURN && actionStatus == Game.ActionStatus.ACKNOWLEDGED ) || ( actionStatus == Game.ActionStatus.TIME_LIMIT_EXCEEDED )) {
                     currentPlayer = ( currentPlayer + 1 ) % noPlayers;
                 }
             } else {
-                // pass null to specify that this player has finished
+                // Pass null to specify that this player has finished,and the option to skip the turn
                 game.act( null , true );
                 currentPlayer = ( currentPlayer + 1 ) % noPlayers;
             }
         }
 
-        // Used to make the game realize it is over
-        game.act( null , false );
+        if (!closedByUser) {
+            // Used to make the game realize it is over
+            game.act( null , false );
 
-        //If we use visuals,close only after the player closes
-        if (VISUALS) {
-            while (frame != null && !frame.isClosed()) {
-                game.act( null , false );
+            // If we use visuals,close only after the player closes
+            if (VISUALS) {
+                while (frame != null && !frame.isClosed()) {
+                    game.act( null , false );
+                }
             }
         }
     }
@@ -138,7 +149,8 @@ class Run {
     public static void showAllActions( GameState gameState ) {
         int currentAction = 0;
 
-        System.out.println( "\nTribe actions:" );
+        System.out.println( "\nActions:" );
+        System.out.println( "Tribe actions:" );
         var tribeActions = gameState.getTribeActions();
         for ( var action : tribeActions ) {
             System.out.println( "Action " + currentAction + ":" + action );

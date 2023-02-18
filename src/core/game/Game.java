@@ -202,50 +202,63 @@ public class Game {
     }
 
     // Parameters saved to be used in the act method,to allow the game to behave as an environment
+
     private GUI frame;
-    private WindowInput wi;
 
-    private boolean useVisuals, firstEnd, newTick, turnEnding;
+    // Turn = a players turn to make actions ending with the END TURN action
+    // Tick = each player has done 1 turn in their order
+    private boolean firstEnd, newTick, turnEnding;
 
+    // The player that is active in the game at the moment
     private int currentPlayerIndex;
-    private Tribe[] tribes;
 
-    // used for time restrictions
+    // Used for time restrictions such as the delay happening at each action,delay at the end turn action
+    // and ect for the time limit on a turn
     private ElapsedCpuTimer ect, actionDelayTimer, endTurnDelay;
+
+    // Remaining time
     private long remainingECT;
+
+    // Used for TURN LIMIT to restrict the player such that the next action is END TURN
     private boolean continueTurn;
 
+    // A status of an action when tried to execute it in the game
     public enum ActionStatus {
         ACKNOWLEDGED, NOT_ACKNOWLEDGED, TIME_LIMIT_EXCEEDED
     }
 
-
+    /**
+     * Prepare the environment by initializing the accordingly
+     *
+     * @param frame the frame
+     * @param wi    the window input
+     */
     public void prepareEnvironment( GUI frame , WindowInput wi ) {
-        this.frame = frame;
-        this.wi = wi;
 
-        this.useVisuals = ( frame == null || wi == null );
+        if (frame == null || wi == null) {
+            VISUALS = false;
+        }
+
+        this.frame = frame;
+
         this.firstEnd = this.newTick = true;
         this.turnEnding = false;
 
         this.currentPlayerIndex = 0;
-        this.tribes = gs.getTribes();
 
-        // TODO:Give more fairness to the turn of each player,since their turn
-        //  initialization will take from their time to compute actions
         processNewTurn();
     }
 
     private void processNewTurn() {
         var tribe = gs.getTribes()[ currentPlayerIndex ];
-        //Init the turn for this tribe (stars, unit reset, etc).
+        // Init the turn for this tribe (stars, unit reset, etc).
         gs.initTurn( tribe );
 
-        //Compute the initial player actions and assign the game states.
+        // Compute the initial player actions and assign the game states.
         gs.computePlayerActions( tribe );
         updateAssignedGameStates();
 
-        //start the timer to the max duration
+        // Start the timer to the max duration
         ect = new ElapsedCpuTimer();
         ect.setMaxTimeMillis( TURN_TIME_MILLIS );
 
@@ -256,7 +269,9 @@ public class Game {
         // make sure all updates are executed and displayed to humans.
         this.actionDelayTimer = null;
         this.endTurnDelay = null;
+
         if (VISUALS && frame != null) {
+            // If we use visuals,start timer for action delay
             actionDelayTimer = new ElapsedCpuTimer();
             actionDelayTimer.setMaxTimeMillis( FRAME_DELAY );
         }
@@ -264,6 +279,12 @@ public class Game {
         this.continueTurn = true;
     }
 
+    /**
+     * Check if an action of a given type is found in the available actions presently
+     *
+     * @param actionType the action type
+     * @return true if there exists such an action,false otherwise
+     */
     private boolean checkActionTypeAvailable( Types.ACTION actionType ) {
         var allAvailableActions = gs.getAllAvailableActions();
         for ( var action : allAvailableActions ) {
@@ -274,23 +295,36 @@ public class Game {
         return false;
     }
 
+    /**
+     * Process an action for the current player.
+     * A null value for action means we will not do anything except update the GUI and timers
+     *
+     * @param action the action
+     * @return an action status to say whether the action was possible to execute,not executed or a time limit has been reached
+     */
     private ActionStatus processAction( Action action ) {
+
+        // TODO: Clean up the code to not have as many portion of code duplicates
+        // TODO: Make it more efficient by trying to minimize the number of NOT_ACKNOWLEDGE gotten
+        //  and to assure that TURN_TIME_MILLIS is used properly(after an END TURN ,there are still
+        //  some operations and calls for the agent which can create a noticeable delay)
+
         var playerId = currentPlayerIndex;
         var tribe = gs.getTribes()[ playerId ];
 
         var actionStatus = Game.ActionStatus.NOT_ACKNOWLEDGED;
 
-        //Take the player for this turn
+        // Take the player for this turn
         Agent ag = players[ playerId ];
         boolean isHumanPlayer = ag instanceof HumanAgent;
 
-        // Check GUI end of turn timer
+        // Check GUI end of turn timer,to determine whether the END TURN action delay is not done
         if (!( endTurnDelay != null && endTurnDelay.remainingTimeMillis() <= 0 )) {
             if (!paused && !animationPaused) {
                 // Action request and execution if turn should be continued
-                //noinspection ConstantConditions
                 if (continueTurn) {
                     if (( !VISUALS || frame == null ) || actionDelayTimer.remainingTimeMillis() <= 0 || isHumanPlayer) {
+                        // If we don't have visuals,a action delay is done or the player is a human agent
 
                         ect.setMaxTimeMillis( remainingECT );  // Reset timer ignoring all other timers or updates
 
@@ -313,6 +347,9 @@ public class Game {
                         if (!isHumanPlayer) {
                             ect.setMaxTimeMillis( remainingECT );
                             boolean timeOut = TURN_TIME_LIMITED && ect.exceededMaxTime();
+
+                            // Special case:When upgrading a city,there is no END TURN action available in all the actions possible...
+                            // However,the framework allows for executing a END TURN either way
                             boolean availableEndAction = checkActionTypeAvailable( END_TURN );
                             if (availableEndAction) {
                                 continueTurn &= gs.existAvailableActions( tribe ) && !timeOut;
@@ -320,13 +357,15 @@ public class Game {
                         }
 
                     } else {
+                        // We have visuals,and the delay is still not done so cancel the action
                         action = null;
                     }
-                } else {
+                } else if (checkActionTypeAvailable( END_TURN )) {
                     // If turn should be ending (and we've not already triggered end turn), the action is automatically EndTurn
                     action = new EndTurn( gs.getActiveTribeID() );
                 }
             } else {
+                // Game is paused for animation or request from the user,so switch to null to not execute any action
                 action = null;
             }
 
@@ -349,17 +388,23 @@ public class Game {
                         return ActionStatus.ACKNOWLEDGED;
                     }
                 }
+            } else if (action != null && action.getActionType() == END_TURN) {
+                // If no visuals and we should end the turn,do it here
+                // Create an END TURN action and finish this players turn accordingly
+                gs.next( new EndTurn( playerId ) );
+                gs.computePlayerActions( tribe );
+                updateAssignedGameStates();
+                turnEnding = true;
 
-//                try {
-//                    Thread.sleep(10);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+                return ( TURN_TIME_LIMITED ? ( continueTurn ? ActionStatus.ACKNOWLEDGED : ActionStatus.TIME_LIMIT_EXCEEDED ) : ActionStatus.ACKNOWLEDGED );
             }
+
 
             boolean ended = ( action != null && action.getActionType() == END_TURN );
 
             if (!ended) {
+                // We haven't received an END TURN action,continue with this action
+
 //                if (action != null) {
 //                    if (!VISUALS || ( frame != null && action.getActionType() != ATTACK )) {
 //                        gs.next( action );
@@ -378,6 +423,8 @@ public class Game {
 //                        appliedAction = true;
 //                    }
 //                }
+
+                // Action is not null and in the case of the action ATTACK,animation is done,only then update the game state
                 if (action != null && !VISUALS || frame != null && ( action != null && !( action.getActionType() == ATTACK ) ||
                         ( action = frame.getAnimatedAction() ) != null )) {
                     // Play the action in the game and update the available actions list and observations
@@ -394,13 +441,21 @@ public class Game {
                 turnEnding = true;
             }
         } else {
+            // Create an END TURN action and finish this players turn accordingly
+            gs.next( new EndTurn( playerId ) );
+            gs.computePlayerActions( tribe );
+            updateAssignedGameStates();
             turnEnding = true;
-            actionStatus = ActionStatus.TIME_LIMIT_EXCEEDED;
+
+            actionStatus = ( TURN_TIME_LIMITED ? ( continueTurn ? ActionStatus.ACKNOWLEDGED : ActionStatus.TIME_LIMIT_EXCEEDED ) : ActionStatus.ACKNOWLEDGED );
         }
 
         return actionStatus;
     }
 
+    /**
+     * Process the end of a players turn
+     */
     private void processEndTurn() {
         var tribe = gs.getTribes()[ currentPlayerIndex ];
         if (LOG_STATS)
@@ -439,6 +494,11 @@ public class Game {
         }
     }
 
+    /**
+     * Check if the game is over
+     *
+     * @return true if the game is over,false otherwise
+     */
     private boolean checkGameOver() {
         // Check end of game
         if (firstEnd && gameOver()) {
@@ -490,7 +550,7 @@ public class Game {
         boolean gameOver = gameOver();
         ActionStatus actionStatus = ActionStatus.NOT_ACKNOWLEDGED;
         if (newTick) {
-            // Check end of gama and update
+            // Check end of game and update
             boolean end = checkGameOver();
             if (end && firstEnd) {
                 return ActionStatus.NOT_ACKNOWLEDGED;
@@ -501,32 +561,33 @@ public class Game {
 
         if (!gameOver) {
             if (skipPlayersTurn) {
-                // skip the turn of this player if they are finished,indicated by the null action
+                // Skip the turn of this player if they are finished,indicated by the null action
                 if (playerCanAct( currentPlayerIndex )) {
                     System.out.println( "Unexpected problem occurred when giving the action for the environment" );
                     System.exit( 1 );
                 }
 
-                // update whose turn it is
+                // Update whose turn it is
                 currentPlayerIndex = ( currentPlayerIndex + 1 ) % players.length;
                 if (currentPlayerIndex == 0) {
                     newTick = true;
                 }
             } else {
-
-                actionStatus = processAction( action );
+                // Try to execute the action given in the game
+                var actionCopy = action != null ? action.copy() : null;
+                actionStatus = processAction( actionCopy );
 
 //                var tribe = gs.getTribes()[ currentPlayerIndex ];
 //                System.out.println("Move by player "+currentPlayerIndex+" from tribe "+tribe.getType());
 
+                // New turn
                 if (turnEnding) {
                     turnEnding = false;
                     processEndTurn();
                     processNewTurn();
                 }
 
-                // if we got a null action,just update the visuals and return false
-                // ignore this action
+                // Ff we got a null action,just update the visuals and don't acknowledge this action
                 if (action == null) {
                     return ActionStatus.NOT_ACKNOWLEDGED;
                 }
@@ -540,6 +601,12 @@ public class Game {
         return actionStatus;
     }
 
+    /**
+     * Verify if a player has not lost or won the game
+     *
+     * @param playerIndex index of the player
+     * @return true if the player is still in the game,false otherwise
+     */
     public boolean playerCanAct( int playerIndex ) {
         return gs.getTribes()[ playerIndex ].getWinner() == Types.RESULT.INCOMPLETE;
     }

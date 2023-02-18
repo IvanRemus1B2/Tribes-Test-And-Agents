@@ -13,16 +13,20 @@
   "Force End": false,
   "Population Size": 100,
   "Players": [
-    "Human",
-    "Human"
+    "Rule Based",
+    "Rule Based",
+    "Rule Based",
+    "Rule Based"
   ],
   "Tribes": [
     "Xin Xi",
-    "Imperius"
+    "Imperius",
+    "Bardur",
+    "Oumaji"
   ],
   "Verbose": false,
   "Replay File Name": "save/1590072023986/0_0/game.json",
-  "Level File": "levels/SampleLevel2p.csv",
+  "Level File": "levels/BalancedLevel4p.csv",
   "Game Seed": "-1",
   "Agents Seed": "-1",
   "Level Seed": "-1"
